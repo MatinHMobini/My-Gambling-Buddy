@@ -33,7 +33,8 @@ class BallDontLieAPI:
     ) -> Dict:
         params = {
             "page": page,
-            "per_page": per_page
+            "per_page": per_page,
+            "team_ids[]": team_ids
         }
         if search:
             params["search"] = search
