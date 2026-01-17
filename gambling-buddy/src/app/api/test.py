@@ -15,9 +15,9 @@ print("\n---- Compare Players ----")
 print(compare_players("Stephen Curry", "LeBron James"))
 
 # ---- Team next game test ----
-#team = "Golden State Warriors"
-#print("\n---- Team Next Game ----")
-#print(team_next_game(team))
+# team = "Los Angeles Lakers"
+# print("\n---- Team Next Game ----")
+# print(team_next_game(team))
 
 # ---- Over/Under prediction test ----
 #target_points = 30

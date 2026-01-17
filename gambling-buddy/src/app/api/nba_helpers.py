@@ -1,6 +1,6 @@
 from balldontlieapi import BallDontLieAPI
 from dotenv import load_dotenv
-from datetime import datetime
+from datetime import datetime, timedelta
 import os
 
 load_dotenv()
@@ -8,7 +8,7 @@ api = BallDontLieAPI(api_key=os.getenv("BALLDONTLIE_API_KEY"), timeout=30)  # st
 
 # ---- Helper functions ----
 def get_current_nba_season():
-    today = datetime.utcnow()
+    today = datetime.now()
     year = today.year
 
     # NBA season starts around October
@@ -82,3 +82,34 @@ def player_projection(player_name: str, last_n: int = 5):
         "team": player["team"]["full_name"],
         "averages": averages
     }
+
+def next_game_info(team_name):
+    team = find_team_by_name(team_name)
+
+    if not team:
+        return "Team not found."
+
+    # Today
+    now = datetime.now()
+
+    # Create a list of the next 7 dates as strings
+    next_7_days = [(now + timedelta(days=i)).strftime("%Y-%m-%d") for i in range(7)]
+
+    # Call the API
+    games = api.get_games(
+        team_ids=[team["id"]],
+        dates=next_7_days,  # pass the list of dates here
+        per_page=10
+    )["data"]
+
+    if not games:
+        return f"No upcoming games found for {team['full_name']}."
+
+    games = sorted(games, key=lambda g: g["date"])
+
+    return games[0]
+
+def next_game_lineup(game):
+    homeTeamId = game['home_team']['id']
+    visitorTeamId = game['visitor_team']['id']
+    return api.get_players(team_ids={homeTeamId, visitorTeamId})

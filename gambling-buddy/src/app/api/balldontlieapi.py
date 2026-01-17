@@ -12,14 +12,14 @@ class BallDontLieAPI:
 
         if api_key:
             self.session.headers.update({
-            "Authorization": f"Bearer {api_key}"
+                "Authorization": api_key
             })
 
     def _get(self, endpoint: str, params: Optional[Dict[str, Any]] = None) -> Dict:
         url = f"{self.BASE_URL}/{endpoint}"
         response = self.session.get(url, params=params, timeout=self.timeout)
         response.raise_for_status()
-        return response.json()  
+        return response.json()
 
     # --------------------
     # Players
@@ -27,6 +27,7 @@ class BallDontLieAPI:
     def get_players(
         self,
         search: Optional[str] = None,
+        team_ids: Optional[str] = None,
         page: int = 1,
         per_page: int = 25
     ) -> Dict:
@@ -36,7 +37,8 @@ class BallDontLieAPI:
         }
         if search:
             params["search"] = search
-        return self._get("players", params)
+
+        return self._get("players/active", params)
 
     def get_player(self, player_id: int) -> Dict:
         return self._get(f"players/{player_id}")
@@ -77,6 +79,19 @@ class BallDontLieAPI:
 
     def get_game(self, game_id: int) -> Dict:
         return self._get(f"games/{game_id}")
+    
+    def get_lineups(
+        self,
+        game_ids: list[int],
+        page: int = 1,
+        per_page: int = 25
+    ) -> Dict:
+        params: Dict[str, object] = {
+            "page": page,
+            "per_page": per_page,
+            "game_ids[]": game_ids
+        }
+        return self._get("lineups", params)
 
     # --------------------
     # Stats

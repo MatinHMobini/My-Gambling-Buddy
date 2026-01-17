@@ -1,8 +1,7 @@
 import os
-from datetime import datetime, timedelta
 from dotenv import load_dotenv
 from openai import OpenAI
-from nba_helpers import player_projection, find_team_by_name, api
+from nba_helpers import player_projection, next_game_info, find_team_by_name
 
 load_dotenv()
 client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
@@ -30,13 +29,17 @@ def player_recent_performance(name, last_n=5):
         messages=[
             {"role": "system", "content": "You are an NBA analyst providing concise performance insights. You can use friendly/informal language and slang/comedic as you are providing the response."},
             {"role": "user", "content": prompt}],
-        max_tokens=800
+        max_tokens=1000
     )
     return response.choices[0].message.content
 
 def compare_players(p1, p2, last_n=5):
     a = player_projection(p1, last_n)
     b = player_projection(p2, last_n)
+
+    aNextGame = next_game_info(a['team'])
+    bNextGame = next_game_info(b['team'])
+
     if not a or not b:
         return "Could not compare players."
 
@@ -50,43 +53,27 @@ def compare_players(p1, p2, last_n=5):
     {a['player_name']} ({a['team']}): {a_stats}
     {b['player_name']} ({b['team']}): {b_stats}
 
-    Say who is more likely to get over their odds/parlay line right now (also include the actual parlay/odds line itself, it doesn't only have to be for points), if anyone in the game on either team is injured and how it can affect the game/the performance of these compared players, if the upcoming game of both players being compared are either home or away it should be considered as impactful in their performance (as this can affect performance of players, players usually play better on home turf), how have they played in the last few games, and what are their strengths/weaknesses, who are their next opponents, what are their projected stats.
+    This is their next games:
+    {a['player_name']}: {aNextGame} 
+    {b['player_name']}: {bNextGame}
+
+    Say who is more likely to get over their odds/parlay line for the next game, considering factors such as home or away, how have they played in the last few games, strengths/weaknesses, and projected stats. Try to not be too repetitive and summarize where possible.
     """
 
     response = client.chat.completions.create(
         model="gpt-4.1",
         messages=[
-            {"role": "system", "content": "Always introduce your response with 'HEYYYYY BUDDY!' and try to begin your first sentence with a friendly/humainlike greeting. You are an NBA analyst providing concise, friendly, and informal performance insights. Use slang or comedic touches as much as possible. keep your responses limited to around 500-700 tokens. Because of frequent trades, please verify the stats/team of every player that you reference in your response and you can use the data from balldontlie api to verify the lineups of each team"},
+            {"role": "system", "content": "Always introduce your response with 'HEYYYYY BUDDY!' and try to begin your first sentence with a friendly/humanlike greeting. You are an NBA analyst providing concise, friendly, and informal performance insights. Use slang or comedic touches as much as possible. keep your responses limited to 500-700 tokens."},
             {"role": "user", "content": prompt}
         ],
-        max_tokens=800
+        max_tokens=1000
     )
 
     return response.choices[0].message.content
 
 def team_next_game(team_name):
     team = find_team_by_name(team_name)
-
-    if not team:
-        return "Team not found."
-
-    # Defining date range for next two weeks (7 days)
-    today = datetime.utcnow().date().isoformat()
-    future = (datetime.utcnow().date() + timedelta(days=7)).isoformat()
-
-    games = api.get_games(
-        team_ids=[team["id"]],
-        start_date=today,
-        end_date=future,
-        per_page=10
-    )["data"]
-
-    if not games:
-        return f"No upcoming games found for {team['full_name']}."
-
-    games = sorted(games, key=lambda g: g["date"])
-
-    game = games[0]
+    game = next_game_info(team_name)
 
     home = game["home_team"]
     visitor = game["visitor_team"]
