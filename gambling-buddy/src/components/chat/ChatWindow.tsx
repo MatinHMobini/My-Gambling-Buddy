@@ -1,11 +1,13 @@
 "use client";
 
-import { useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { v4 as uuidv4 } from "uuid";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import type { ChatResponse } from "@/lib/types/cards";
 import { CardRenderer } from "@/components/cards/CardRenderer";
+
+type Sport = "NBA" | "NFL" | "NHL" | "MLB" | "La Liga";
 
 type ChatMsg = {
   id: string;
@@ -14,14 +16,43 @@ type ChatMsg = {
   cards?: ChatResponse["cards"];
 };
 
-export function ChatWindow() {
+const sportStarter: Record<Sport, string> = {
+  NBA: 'Yo 👋 Ask me: “What NBA games are this week?”',
+  NFL: 'Yo 👋 Ask me: “What NFL games are this week?”',
+  NHL: 'Yo 👋 Ask me: “What NHL games are this week?”',
+  MLB: 'Yo 👋 Ask me: “What MLB games are this week?”',
+  "La Liga": 'Yo 👋 Ask me: “What La Liga matches are this week?”',
+};
+
+const sportPlaceholder: Record<Sport, string> = {
+  NBA: 'Try: "Brunson points line 24.5 next game"',
+  NFL: 'Try: "Mahomes passing yards line 285.5"',
+  NHL: 'Try: "Matthews shots line 4.5 next game"',
+  MLB: 'Try: "Ohtani hits line 1.5 today"',
+  "La Liga": 'Try: "Real Madrid vs Sevilla who wins?"',
+};
+
+export function ChatWindow({ sport }: { sport: Sport }) {
   const [messages, setMessages] = useState<ChatMsg[]>([
-    { id: uuidv4(), role: "assistant", content: 'Yo 👋 Ask me: “What NBA games are this week?”' },
+    { id: uuidv4(), role: "assistant", content: sportStarter[sport] },
   ]);
   const [input, setInput] = useState("");
   const bottomRef = useRef<HTMLDivElement | null>(null);
 
   const canSend = useMemo(() => input.trim().length > 0, [input]);
+
+  // When sport changes: add a small system-style assistant bubble + update greeting if you want.
+  useEffect(() => {
+    setMessages((m) => [
+      ...m,
+      {
+        id: uuidv4(),
+        role: "assistant",
+        content: `Switched to **${sport}** mode ✅  Ask away.`,
+      },
+    ]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [sport]);
 
   async function send() {
     if (!canSend) return;
@@ -33,12 +64,18 @@ export function ChatWindow() {
     const res = await fetch("/api/chat", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ messages: [...messages, userMsg] }),
+      // 👇 sport goes with the request so backend can route to correct data + prompt
+      body: JSON.stringify({ sport, messages: [...messages, userMsg] }),
     });
 
     const data = (await res.json()) as ChatResponse;
 
-    const botMsg: ChatMsg = { id: uuidv4(), role: "assistant", content: data.content, cards: data.cards };
+    const botMsg: ChatMsg = {
+      id: uuidv4(),
+      role: "assistant",
+      content: data.content,
+      cards: data.cards,
+    };
     setMessages((m) => [...m, botMsg]);
 
     setTimeout(() => bottomRef.current?.scrollIntoView({ behavior: "smooth" }), 50);
@@ -53,23 +90,12 @@ export function ChatWindow() {
           {messages.map((msg) => {
             const isUser = msg.role === "user";
             return (
-              <div
-                key={msg.id}
-                className={isUser ? "flex justify-end" : "flex justify-start"}
-              >
-                <div className={isUser ? "max-w-[85%]" : "max-w-[85%]"}>
-                  {/* Optional name row */}
-                  <div
-                    className={
-                      isUser
-                        ? "mb-1 text-right text-[11px] text-zinc-500"
-                        : "mb-1 text-left text-[11px] text-zinc-500"
-                    }
-                  >
+              <div key={msg.id} className={isUser ? "flex justify-end" : "flex justify-start"}>
+                <div className="max-w-[85%]">
+                  <div className={isUser ? "mb-1 text-right text-[11px] text-zinc-500" : "mb-1 text-left text-[11px] text-zinc-500"}>
                     {isUser ? "You" : "Gambling Buddy"}
                   </div>
 
-                  {/* Bubble */}
                   <div
                     className={
                       isUser
@@ -81,7 +107,6 @@ export function ChatWindow() {
                       {msg.content}
                     </div>
 
-                    {/* Cards rendered as attachments under the bubble text */}
                     {msg.cards?.length ? (
                       <div className="mt-3 space-y-3">
                         {msg.cards.map((c, idx) => (
@@ -103,7 +128,7 @@ export function ChatWindow() {
       <div className="rounded-2xl bg-white p-3 shadow-sm ring-1 ring-black/10">
         <div className="flex gap-2">
           <Input
-            placeholder='Try: "Project Brunson PTS, line 24.5"'
+            placeholder={sportPlaceholder[sport]}
             value={input}
             onChange={(e) => setInput(e.target.value)}
             onKeyDown={(e) => e.key === "Enter" && send()}

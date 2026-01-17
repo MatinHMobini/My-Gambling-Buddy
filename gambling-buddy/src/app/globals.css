@@ -81,6 +81,20 @@
   --sidebar-ring: oklch(0.705 0.015 286.067);
 }
 
+/* optional: smoother glow rendering */
+.glow-smooth {
+  transform: translateZ(0);
+  will-change: transform, opacity;
+}
+
+.noise-overlay {
+  background-image: radial-gradient(rgba(255,255,255,0.06) 1px, transparent 1px);
+  background-size: 12px 12px;
+  opacity: 0.10;
+  mix-blend-mode: overlay;
+}
+
+
 .dark {
   --background: oklch(0.141 0.005 285.823);
   --foreground: oklch(0.985 0 0);
