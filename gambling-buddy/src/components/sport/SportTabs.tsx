@@ -1,7 +1,13 @@
 "use client";
 
-import { useMemo, useRef, useState } from "react";
-import { motion, AnimatePresence, useMotionValue, useSpring } from "framer-motion";
+import { useMemo, useRef, useState, useEffect } from "react";
+import {
+  motion,
+  AnimatePresence,
+  useMotionValue,
+  useSpring,
+  type MotionValue,
+} from "framer-motion";
 import { cn } from "@/lib/utils";
 
 export type Sport = "NBA" | "NFL" | "NHL" | "MLB" | "La Liga";
@@ -25,6 +31,197 @@ function uid() {
   return Math.random().toString(16).slice(2) + Date.now().toString(16);
 }
 
+/** --- MONEY RAIN CANVAS (background layer) --- */
+type Drop = {
+  x: number;
+  y: number;
+  vx: number;
+  vy: number;
+  size: number;
+  rot: number;
+  vrot: number;
+  ch: string;
+  alpha: number;
+};
+
+function MoneyRain({
+  containerRef,
+  mx,
+  my,
+}: {
+  containerRef: React.RefObject<HTMLDivElement | null>;
+  mx: MotionValue<number>;
+  my: MotionValue<number>;
+}) {
+  const canvasRef = useRef<HTMLCanvasElement | null>(null);
+  const dropsRef = useRef<Drop[]>([]);
+  const rafRef = useRef<number | null>(null);
+
+  // knobs you can play with
+  const SYMBOLS = ["$", "€", "¢"];
+  const BASE_COLOR = "rgba(0, 255, 120,"; // neon-ish green
+  const gravity = 0.008;      // gentler accel = less wavey
+  const terminalVy = 2.2;     // cap fall speed so it stays steady
+  const wind = 0.003; // ←→ slow drift
+  const umbrellaRadius = 95; // how big the "umbrella" influence is
+  const umbrellaForce = 0.35; // push-away strength
+  const umbrellaLift = 0.55; // upward kick
+
+  function spawnDrop(w: number, h: number): Drop {
+    const size = 10 + Math.random() * 10;
+    return {
+      x: Math.random() * w,
+      y: -20 - Math.random() * 180, // tighter spawn band = more continuous entry
+      vx: (Math.random() - 0.5) * 0.25,
+      vy: 0.25 + Math.random() * 0.85,
+      size,
+      rot: Math.random() * Math.PI * 2,
+      vrot: (Math.random() - 0.5) * 0.02,
+      ch: SYMBOLS[(Math.random() * SYMBOLS.length) | 0],
+      alpha: 0.16 + Math.random() * 0.28,
+    };
+  }
+
+  function ensureDrops(w: number, h: number) {
+    // density knob: more/less drops
+    const target = Math.max(18, Math.floor((w * h) / 2000));
+    if (dropsRef.current.length === target) return;
+
+    if (dropsRef.current.length < target) {
+      const missing = target - dropsRef.current.length;
+      for (let i = 0; i < missing; i++) dropsRef.current.push(spawnDrop(w, h));
+    } else {
+      dropsRef.current = dropsRef.current.slice(0, target);
+    }
+  }
+
+  useEffect(() => {
+    const canvas = canvasRef.current;
+    const host = containerRef.current;
+    if (!canvas || !host) return;
+
+    const ctx = canvas.getContext("2d");
+    if (!ctx) return;
+
+    const resize = () => {
+      const r = host.getBoundingClientRect();
+      const dpr = Math.max(1, window.devicePixelRatio || 1);
+      canvas.width = Math.floor(r.width * dpr);
+      canvas.height = Math.floor(r.height * dpr);
+      canvas.style.width = `${r.width}px`;
+      canvas.style.height = `${r.height}px`;
+      ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+      ensureDrops(r.width, r.height);
+    };
+
+    resize();
+    const ro = new ResizeObserver(resize);
+    ro.observe(host);
+
+    const tick = () => {
+      const r = host.getBoundingClientRect();
+      const w = r.width;
+      const h = r.height;
+
+      ensureDrops(w, h);
+
+      ctx.clearRect(0, 0, w, h);
+
+      // Cursor position in container coords (your mx/my already are)
+      const cx = mx.get();
+      const cy = my.get();
+      const cursorActive = cx > -1000 && cy > -1000;
+
+      // paint a subtle “umbrella glow” so it feels interactive
+      if (cursorActive) {
+        const g = ctx.createRadialGradient(cx, cy, 0, cx, cy, umbrellaRadius);
+        g.addColorStop(0, "rgba(0,255,120,0.15)");
+        g.addColorStop(1, "rgba(0,255,120,0)");
+        ctx.fillStyle = g;
+        ctx.fillRect(0, 0, w, h);
+      }
+
+      for (const d of dropsRef.current) {
+        // physics
+        d.vx += wind * (Math.random() > 0.5 ? 1 : -1);
+        d.vy += gravity;
+        if (d.vy > terminalVy) d.vy = terminalVy;
+
+
+        // umbrella repel / bounce
+        if (cursorActive) {
+          const dx = d.x - cx;
+          const dy = d.y - cy;
+          const dist = Math.sqrt(dx * dx + dy * dy);
+
+          if (dist < umbrellaRadius) {
+            // push away + upward "bounce"
+            const nx = dx / (dist || 1);
+            const ny = dy / (dist || 1);
+
+            const strength = (1 - dist / umbrellaRadius) * umbrellaForce;
+
+            d.vx += nx * strength;
+            d.vy += ny * strength;
+            d.vy -= strength * umbrellaLift; // lift
+
+            // a little bounce feel
+            d.vy = Math.max(d.vy, -1.6);
+          }
+        }
+
+        d.x += d.vx;
+        d.y += d.vy;
+        d.rot += d.vrot;
+
+        // wrap
+        if (d.y > h + 40) {
+          const nd = spawnDrop(w, h);
+          d.x = nd.x;
+          d.y = -20 - Math.random() * 180;
+          d.vx = nd.vx;
+          d.vy = nd.vy;
+          d.size = nd.size;
+          d.rot = nd.rot;
+          d.vrot = nd.vrot;
+          d.ch = nd.ch;
+          d.alpha = nd.alpha;
+        }
+        if (d.x < -40) d.x = w + 40;
+        if (d.x > w + 40) d.x = -40;
+
+        // render
+        ctx.save();
+        ctx.translate(d.x, d.y);
+        ctx.rotate(d.rot);
+
+        ctx.font = `700 ${d.size}px ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto`;
+        ctx.fillStyle = `${BASE_COLOR}${d.alpha})`;
+        ctx.fillText(d.ch, -d.size * 0.35, d.size * 0.35);
+
+        ctx.restore();
+      }
+
+      rafRef.current = requestAnimationFrame(tick);
+    };
+
+    rafRef.current = requestAnimationFrame(tick);
+
+    return () => {
+      ro.disconnect();
+      if (rafRef.current) cancelAnimationFrame(rafRef.current);
+    };
+  }, [containerRef, mx, my]);
+
+  return (
+    <canvas
+      ref={canvasRef}
+      aria-hidden
+      className="pointer-events-none absolute inset-0"
+    />
+  );
+}
+
 export function SportTabs({
   value,
   onChange,
@@ -40,7 +237,7 @@ export function SportTabs({
   const mx = useMotionValue(-9999);
   const my = useMotionValue(-9999);
 
-  // Smooth the motion values
+  // Smooth motion values
   const sx = useSpring(mx, { stiffness: 350, damping: 35 });
   const sy = useSpring(my, { stiffness: 350, damping: 35 });
 
@@ -90,6 +287,9 @@ export function SportTabs({
           "sm:w-[560px]"
         )}
       >
+        {/* ✅ Money rain background */}
+        <MoneyRain containerRef={containerRef} mx={mx} my={my} />
+
         {/* Ambient scan / shimmer */}
         <motion.div
           aria-hidden
@@ -143,7 +343,6 @@ export function SportTabs({
         <div className="relative flex items-center justify-between gap-2 rounded-2xl p-1">
           {SPORTS.map((s, i) => {
             const isActive = s.id === value;
-
             return (
               <DockItem
                 key={s.id}
@@ -168,7 +367,6 @@ export function SportTabs({
             <span>{active.hint}</span>
           </div>
 
-          {/* tiny animated status dot */}
           <div className="flex items-center gap-2">
             <motion.div
               aria-hidden
@@ -185,8 +383,7 @@ export function SportTabs({
 }
 
 /**
- * Dock item with cursor-proximity magnification (MacOS dock vibe)
- * using the smoothed motion values from the parent.
+ * Dock item with cursor-proximity magnification
  */
 function DockItem({
   label,
@@ -208,17 +405,13 @@ function DockItem({
 }) {
   const ref = useRef<HTMLButtonElement | null>(null);
 
-  // “distance to cursor” -> scale mapping
   const base = 1.0;
   const max = 1.22;
 
-  // We compute scale in render via a derived function using current motion values.
-  // Framer motion reads MotionValue updates without re-rendering the whole tree.
   const scale = useSpring(1, { stiffness: 420, damping: 30 });
   const lift = useSpring(0, { stiffness: 420, damping: 30 });
 
-  // Update springs whenever motion values change
-  // (This is lightweight; the math is tiny.)
+  // NOTE: This is your existing approach; it works.
   mx.on("change", () => {
     const el = ref.current;
     if (!el) return;
@@ -227,7 +420,6 @@ function DockItem({
     const r = el.getBoundingClientRect();
     if (!parent) return;
 
-    // cursor position in parent coords
     const cx = mx.get() + parent.left;
     const cy = my.get() + parent.top;
 
@@ -235,9 +427,8 @@ function DockItem({
     const dy = cy - (r.top + r.height / 2);
     const d = Math.sqrt(dx * dx + dy * dy);
 
-    // radius where effect fades out
     const radius = 140;
-    const t = Math.max(0, 1 - d / radius); // 1 near cursor, 0 far
+    const t = Math.max(0, 1 - d / radius);
     const s = base + (max - base) * t;
 
     scale.set(s);
@@ -258,7 +449,6 @@ function DockItem({
       style={{ scale, y: lift }}
       title={label}
     >
-      {/* Active base */}
       {active && (
         <motion.div
           layoutId="active-core"
@@ -267,7 +457,6 @@ function DockItem({
         />
       )}
 
-      {/* Neon ring around active icon */}
       {active && (
         <motion.div
           aria-hidden
@@ -286,7 +475,6 @@ function DockItem({
         <span className="hidden text-sm font-semibold sm:inline">{label}</span>
       </div>
 
-      {/* Active underline pulse */}
       {active && (
         <motion.div
           aria-hidden

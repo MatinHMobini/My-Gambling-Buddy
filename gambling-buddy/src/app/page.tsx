@@ -13,9 +13,9 @@ export default function Home() {
 
   return (
     <AppShell>
-      <div className="space-y-4">
+      <div className="space-y-0">
         {/* Header stays BROWN (theme background) */}
-        <div className="rounded-2xl bg-background p-6">
+        <div className="rounded-2xl bg-background px-6 pt-6 pb-2">
           <div className="flex flex-col items-center gap-5 sm:flex-row sm:items-center sm:justify-between">
             {/* Logo only */}
             <div className="flex items-center justify-center sm:justify-start">
