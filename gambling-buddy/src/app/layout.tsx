@@ -1,10 +1,14 @@
 // src/app/layout.tsx
 import "./globals.css";
+import "./theme.css";
 import type { Metadata } from "next";
 
 export const metadata: Metadata = {
-  title: "Gambling Buddy",
-  description: "NBA betting buddy (entertainment only).",
+  title: {
+    default: "Gambling Buddy",
+    template: "%s • Gambling Buddy",
+  },
+  description: "Sports betting buddy (entertainment only).",
 };
 
 export default function RootLayout({
@@ -14,7 +18,7 @@ export default function RootLayout({
 }) {
   return (
     <html lang="en">
-      <body className="min-h-screen bg-background text-foreground antialiased">
+      <body className="min-h-screen text-foreground antialiased">
         {children}
       </body>
     </html>

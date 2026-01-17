@@ -1,0 +1,63 @@
+/* src/app/theme.css */
+
+html,
+body {
+  background: #a17945; /* your logo background brown */
+}
+
+:root {
+  --background: 34 40% 45%;
+  --foreground: 30 40% 96%;
+
+  --card: 34 38% 45%;
+  --card-foreground: 30 40% 96%;
+
+  --popover: 34 38% 45%;
+  --popover-foreground: 30 40% 96%;
+
+  --muted: 34 32% 42%;
+  --muted-foreground: 30 28% 92%;
+
+  --border: 34 28% 55%;
+  --input: 34 28% 55%;
+
+  --primary: 34 55% 20%;
+  --primary-foreground: 30 40% 96%;
+
+  --secondary: 34 30% 50%;
+  --secondary-foreground: 30 40% 96%;
+
+  --accent: 34 30% 50%;
+  --accent-foreground: 30 40% 96%;
+
+  --ring: 30 40% 90%;
+}
+
+/* ✅ ONLY the chat area becomes "white mode" */
+.chat-surface {
+  --background: 0 0% 100%;
+  --foreground: 240 10% 4%;
+
+  --card: 0 0% 100%;
+  --card-foreground: 240 10% 4%;
+
+  --popover: 0 0% 100%;
+  --popover-foreground: 240 10% 4%;
+
+  --muted: 240 5% 96%;
+  --muted-foreground: 240 4% 46%;
+
+  --border: 240 6% 90%;
+  --input: 240 6% 90%;
+
+  --primary: 240 6% 10%;
+  --primary-foreground: 0 0% 98%;
+
+  --secondary: 240 5% 96%;
+  --secondary-foreground: 240 6% 10%;
+
+  --accent: 240 5% 96%;
+  --accent-foreground: 240 6% 10%;
+
+  --ring: 240 5% 65%;
+}

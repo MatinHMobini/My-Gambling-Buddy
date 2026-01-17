@@ -4,7 +4,7 @@ import { Badge } from "@/components/ui/badge";
 
 export function AppShell({ children }: { children: ReactNode }) {
   return (
-    <div className="min-h-screen bg-background text-foreground">
+    <div className="min-h-screen bg-transparent text-foreground">
       <div className="mx-auto grid max-w-7xl grid-cols-12 gap-4 p-4">
         <aside className="col-span-12 md:col-span-3">
           <Card className="p-4">
@@ -12,6 +12,7 @@ export function AppShell({ children }: { children: ReactNode }) {
               <div className="text-lg font-semibold">Gambling Buddy</div>
               <Badge variant="secondary">NBA</Badge>
             </div>
+
             <div className="mt-2 text-sm text-muted-foreground">
               Ask for schedules, projections, and matchup breakdowns.
             </div>
@@ -29,6 +30,7 @@ export function AppShell({ children }: { children: ReactNode }) {
           </Card>
         </aside>
 
+        {/* IMPORTANT: main is NOT white anymore */}
         <main className="col-span-12 md:col-span-9">{children}</main>
       </div>
     </div>
