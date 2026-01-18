@@ -6,6 +6,7 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import type { ChatResponse } from "@/lib/types/cards";
 import { CardRenderer } from "@/components/cards/CardRenderer";
+import { SportLoadingBubble } from "@/components/chat/SportLoadingBubble";
 
 type Sport = "NBA" | "NFL" | "NHL" | "MLB" | "La Liga";
 type QuickMode = "games" | "projection" | "matchup" | "parlay" | null;
@@ -60,6 +61,13 @@ export function ChatWindow({ sport }: { sport: Sport }) {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [sport]);
 
+  // Scroll to bottom when loading starts (feels like live typing)
+  useEffect(() => {
+    if (!loading) return;
+    const t = setTimeout(() => bottomRef.current?.scrollIntoView({ behavior: "smooth" }), 60);
+    return () => clearTimeout(t);
+  }, [loading]);
+
   // Listen for sidebar button events
   useEffect(() => {
     function onAction(e: Event) {
@@ -68,7 +76,11 @@ export function ChatWindow({ sport }: { sport: Sport }) {
       setQuickMode(mode);
 
       // Reset fields for clarity
-      setP1(""); setP2(""); setTeam(""); setLine(""); setNotes("");
+      setP1("");
+      setP2("");
+      setTeam("");
+      setLine("");
+      setNotes("");
       setTimeout(() => bottomRef.current?.scrollIntoView({ behavior: "smooth" }), 50);
     }
 
@@ -103,7 +115,11 @@ export function ChatWindow({ sport }: { sport: Sport }) {
     } catch (e) {
       setMessages((m) => [
         ...m,
-        { id: uuidv4(), role: "assistant", content: "⚠️ API error. Check terminal logs + OPENAI_API_KEY in .env.local." },
+        {
+          id: uuidv4(),
+          role: "assistant",
+          content: "⚠️ API error. Check terminal logs + OPENAI_API_KEY in .env.local.",
+        },
       ]);
     } finally {
       setLoading(false);
@@ -115,11 +131,7 @@ export function ChatWindow({ sport }: { sport: Sport }) {
 
     // Minimal validation per mode
     if (quickMode === "matchup" && (!p1.trim() || !p2.trim())) return;
-    if (quickMode === "projection" && (!p1.trim())) return;
-    if (quickMode === "games" && (!notes.trim())) {
-      // notes here can be like: "this week" or "today" etc.
-      // but keep it optional if you want: remove this block.
-    }
+    if (quickMode === "projection" && !p1.trim()) return;
 
     // Make a "user bubble" so it feels like part of the chat
     const label =
@@ -197,7 +209,13 @@ export function ChatWindow({ sport }: { sport: Sport }) {
             return (
               <div key={msg.id} className={isUser ? "flex justify-end" : "flex justify-start"}>
                 <div className="max-w-[85%]">
-                  <div className={isUser ? "mb-1 text-right text-[11px] text-zinc-500" : "mb-1 text-left text-[11px] text-zinc-500"}>
+                  <div
+                    className={
+                      isUser
+                        ? "mb-1 text-right text-[11px] text-zinc-500"
+                        : "mb-1 text-left text-[11px] text-zinc-500"
+                    }
+                  >
                     {isUser ? "You" : "Gambling Buddy"}
                   </div>
 
@@ -223,6 +241,16 @@ export function ChatWindow({ sport }: { sport: Sport }) {
             );
           })}
 
+          {/* ✅ SPORT THEMED LOADING BUBBLE (assistant typing) */}
+          {loading && (
+            <div className="flex justify-start">
+              <div className="max-w-[85%]">
+                <div className="mb-1 text-left text-[11px] text-zinc-500">Gambling Buddy</div>
+                <SportLoadingBubble sport={sport} />
+              </div>
+            </div>
+          )}
+
           <div ref={bottomRef} />
         </div>
       </div>
@@ -244,20 +272,44 @@ export function ChatWindow({ sport }: { sport: Sport }) {
           {/* Mode-specific inputs */}
           {quickMode === "matchup" && (
             <div className="grid gap-2 sm:grid-cols-2">
-              <Input placeholder="Player 1 (e.g., Stephen Curry)" value={p1} onChange={(e) => setP1(e.target.value)} />
-              <Input placeholder="Player 2 (e.g., LeBron James)" value={p2} onChange={(e) => setP2(e.target.value)} />
+              <Input
+                placeholder="Player 1 (e.g., Stephen Curry)"
+                value={p1}
+                onChange={(e) => setP1(e.target.value)}
+              />
+              <Input
+                placeholder="Player 2 (e.g., LeBron James)"
+                value={p2}
+                onChange={(e) => setP2(e.target.value)}
+              />
               <div className="sm:col-span-2">
-                <Input placeholder='Notes (optional) e.g. "include injuries + home/away"' value={notes} onChange={(e) => setNotes(e.target.value)} />
+                <Input
+                  placeholder='Notes (optional) e.g. "include injuries + home/away"'
+                  value={notes}
+                  onChange={(e) => setNotes(e.target.value)}
+                />
               </div>
             </div>
           )}
 
           {quickMode === "projection" && (
             <div className="grid gap-2 sm:grid-cols-2">
-              <Input placeholder="Player (e.g., Jalen Brunson)" value={p1} onChange={(e) => setP1(e.target.value)} />
-              <Input placeholder='Line (optional) e.g. "24.5 PTS"' value={line} onChange={(e) => setLine(e.target.value)} />
+              <Input
+                placeholder="Player (e.g., Jalen Brunson)"
+                value={p1}
+                onChange={(e) => setP1(e.target.value)}
+              />
+              <Input
+                placeholder='Line (optional) e.g. "24.5 PTS"'
+                value={line}
+                onChange={(e) => setLine(e.target.value)}
+              />
               <div className="sm:col-span-2">
-                <Input placeholder='Notes (optional) e.g. "last 5 games, include matchup context"' value={notes} onChange={(e) => setNotes(e.target.value)} />
+                <Input
+                  placeholder='Notes (optional) e.g. "last 5 games, include matchup context"'
+                  value={notes}
+                  onChange={(e) => setNotes(e.target.value)}
+                />
               </div>
             </div>
           )}
@@ -284,11 +336,18 @@ export function ChatWindow({ sport }: { sport: Sport }) {
             </div>
           )}
 
-
           {quickMode === "parlay" && (
             <div className="grid gap-2 sm:grid-cols-2">
-              <Input placeholder='What vibe? (e.g., "safe 2-leg", "spicy 4-leg")' value={notes} onChange={(e) => setNotes(e.target.value)} />
-              <Input placeholder='Team/players (optional)' value={team} onChange={(e) => setTeam(e.target.value)} />
+              <Input
+                placeholder='What vibe? (e.g., "safe 2-leg", "spicy 4-leg")'
+                value={notes}
+                onChange={(e) => setNotes(e.target.value)}
+              />
+              <Input
+                placeholder="Team/players (optional)"
+                value={team}
+                onChange={(e) => setTeam(e.target.value)}
+              />
             </div>
           )}
 
