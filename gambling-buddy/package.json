@@ -9,6 +9,8 @@
     "lint": "eslint"
   },
   "dependencies": {
+    "dotenv": "^17.2.3",
+    "openai": "^6.16.0",
     "@ai-sdk/openai": "^3.0.12",
     "@radix-ui/react-dialog": "^1.1.15",
     "@radix-ui/react-slot": "^1.2.4",
@@ -24,6 +26,7 @@
     "tailwind-merge": "^3.4.0",
     "uuid": "^13.0.0",
     "zod": "^4.3.5"
+  
   },
   "devDependencies": {
     "@tailwindcss/postcss": "^4",

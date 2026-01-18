@@ -57,7 +57,7 @@ def compare_players(p1, p2, last_n=5):
     {a['player_name']}: {aNextGame} 
     {b['player_name']}: {bNextGame}
 
-    Say who is more likely to get over their odds/parlay line for the next game, considering factors such as home or away, how have they played in the last few games, strengths/weaknesses, and projected stats. Try to not be too repetitive and summarize where possible.
+    Say which player is more likely to get over their odds/parlay line for their next game, considering how have they played in the last few games, strengths/weaknesses, and projected stats. Try to not be too repetitive and summarize where possible.
     """
 
     response = client.chat.completions.create(

@@ -64,28 +64,40 @@ export function AppShell({ children }: { children: ReactNode }) {
               </div>
             </div>
 
-            <div className="mt-5 space-y-2">
-              <QuickActionButton
-                emoji="🏀"
-                label="Games this week"
-                onClick={() => console.log("Games this week")}
-              />
-              <QuickActionButton
-                emoji="📈"
-                label="Player projection"
-                onClick={() => console.log("Player projection")}
-              />
-              <QuickActionButton
-                emoji="🧠"
-                label="Matchup"
-                onClick={() => console.log("Matchup")}
-              />
-              <QuickActionButton
-                emoji="🧩"
-                label="Parlay ideas"
-                onClick={() => console.log("Parlay ideas")}
-              />
+            <div className="mt-5 space-y-2 text-sm">
+              <button
+                type="button"
+                onClick={() => window.dispatchEvent(new CustomEvent("gb:action", { detail: { mode: "games" } }))}
+                className="w-full rounded-xl bg-muted px-4 py-3 text-left font-medium text-foreground/90 ring-1 ring-white/10 transition hover:bg-muted/80"
+              >
+                🏀 Games this week
+              </button>
+
+              <button
+                type="button"
+                onClick={() => window.dispatchEvent(new CustomEvent("gb:action", { detail: { mode: "projection" } }))}
+                className="w-full rounded-xl bg-muted px-4 py-3 text-left font-medium text-foreground/90 ring-1 ring-white/10 transition hover:bg-muted/80"
+              >
+                📈 Player projection
+              </button>
+
+              <button
+                type="button"
+                onClick={() => window.dispatchEvent(new CustomEvent("gb:action", { detail: { mode: "matchup" } }))}
+                className="w-full rounded-xl bg-muted px-4 py-3 text-left font-medium text-foreground/90 ring-1 ring-white/10 transition hover:bg-muted/80"
+              >
+                🧠 Matchup
+              </button>
+
+              <button
+                type="button"
+                onClick={() => window.dispatchEvent(new CustomEvent("gb:action", { detail: { mode: "parlay" } }))}
+                className="w-full rounded-xl bg-muted px-4 py-3 text-left font-medium text-foreground/90 ring-1 ring-white/10 transition hover:bg-muted/80"
+              >
+                🧩 Parlay ideas
+              </button>
             </div>
+
 
             <div className="mt-6 text-center text-xs text-muted-foreground">
               Entertainment only, No guarantees.
