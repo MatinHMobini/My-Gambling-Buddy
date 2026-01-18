@@ -4,7 +4,7 @@ import os
 from dotenv import load_dotenv
 from pathlib import Path
 
-# ✅ Load env from BOTH places: 
+# ✅ Load env from BOTH places:  
 # - repo root: My-Gambling-Buddy/.env  (your keys are here)
 # - app root:  gambling-buddy/.env    (in case you move it later)
 APP_ROOT = Path(__file__).resolve().parents[1]         # .../My-Gambling-Buddy/gambling-buddy
