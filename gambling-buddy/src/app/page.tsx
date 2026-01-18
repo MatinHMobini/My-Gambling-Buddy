@@ -12,7 +12,7 @@ export default function Home() {
   const [sport, setSport] = useState<Sport>("NBA");
 
   return (
-    <AppShell>
+    <AppShell sport={sport}>
       <div className="space-y-0">
         {/* Header stays BROWN (theme background) */}
         <div className="rounded-2xl bg-background px-6 pt-6 pb-2">

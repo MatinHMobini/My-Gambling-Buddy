@@ -1,48 +1,49 @@
-// src/components/layout/AppShell.tsx
+"use client";
+
 import Image from "next/image";
 import Logo from "@/app/Logo.png";
 
 import { ReactNode } from "react";
 import { Card } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
+import type { Sport } from "@/components/sport/SportTabs";
 
-function QuickActionButton({
-  emoji,
-  label,
-  onClick,
+const PROMPTS: Record<Sport, string[]> = {
+  NBA: [
+    'Try: "Brunson points line 24.5 next game"',
+    'Try: "Knicks vs Celtics who has the edge?"',
+    'Try: "Best 2-leg parlay for tonight (safe-ish)"',
+  ],
+  NFL: [
+    'Try: "Bills vs Dolphins matchup overview"',
+    'Try: "Best prop ideas for Mahomes this week"',
+    'Try: "Explain a safe 2-leg parlay idea"',
+  ],
+  NHL: [
+    'Try: "Leafs vs Bruins matchup overview"',
+    'Try: "Best shots-on-goal prop style ideas"',
+    'Try: "What factors matter most for goalies?"',
+  ],
+  MLB: [
+    'Try: "Yankees vs Red Sox matchup overview"',
+    'Try: "Pitcher vs lineup: what should I look for?"',
+    'Try: "Give a simple parlay idea (low risk)"',
+  ],
+  "La Liga": [
+    'Try: "Real Madrid vs Sevilla matchup overview"',
+    'Try: "How do home/away splits affect picks?"',
+    'Try: "Give me 3 angles for this match"',
+  ],
+};
+
+export function AppShell({
+  children,
+  sport,
 }: {
-  emoji: string;
-  label: string;
-  onClick?: () => void;
+  children: ReactNode;
+  sport: Sport;
 }) {
-  return (
-    <Button
-      type="button"
-      variant="outline"
-      onClick={onClick}
-      className={[
-        // spacing + sizing (extra right padding to avoid edge-cramp)
-        "w-full justify-start gap-3 px-2.5 pr-6 py-3",
-        // visuals
-        "rounded-xl border-white/25 bg-black/10 text-white",
-        "hover:bg-black/20 hover:border-white/35",
-        "active:translate-y-[1px]",
-        "shadow-sm hover:shadow-md",
-        // focus
-        "focus-visible:ring-2 focus-visible:ring-white/40",
-      ].join(" ")}
-    >
-      <span className="text-base leading-none">{emoji}</span>
+  const isNBA = sport === "NBA";
 
-      {/* flex-1 ensures consistent inner spacing; min-w-0 prevents overflow issues */}
-      <span className="flex-1 min-w-0 text-sm font-medium leading-snug">
-        {label}
-      </span>
-    </Button>
-  );
-}
-
-export function AppShell({ children }: { children: ReactNode }) {
   return (
     <div className="min-h-screen bg-transparent text-foreground">
       <div className="mx-auto grid max-w-7xl grid-cols-12 gap-4 p-4">
@@ -64,43 +65,77 @@ export function AppShell({ children }: { children: ReactNode }) {
               </div>
             </div>
 
-            <div className="mt-5 space-y-2 text-sm">
-              <button
-                type="button"
-                onClick={() => window.dispatchEvent(new CustomEvent("gb:action", { detail: { mode: "games" } }))}
-                className="w-full rounded-xl bg-muted px-4 py-3 text-left font-medium text-foreground/90 ring-1 ring-white/10 transition hover:bg-muted/80"
-              >
-                🏀 Games this week
-              </button>
+            {/* NBA-only: specialized buttons */}
+            {isNBA ? (
+              <div className="mt-5 space-y-2 text-sm">
+                <button
+                  type="button"
+                  onClick={() =>
+                    window.dispatchEvent(
+                      new CustomEvent("gb:action", { detail: { mode: "games" } })
+                    )
+                  }
+                  className="w-full rounded-xl bg-muted px-4 py-3 text-left font-medium text-foreground/90 ring-1 ring-white/10 transition hover:bg-muted/80"
+                >
+                  🏀 Games this week
+                </button>
 
-              <button
-                type="button"
-                onClick={() => window.dispatchEvent(new CustomEvent("gb:action", { detail: { mode: "projection" } }))}
-                className="w-full rounded-xl bg-muted px-4 py-3 text-left font-medium text-foreground/90 ring-1 ring-white/10 transition hover:bg-muted/80"
-              >
-                📈 Player projection
-              </button>
+                <button
+                  type="button"
+                  onClick={() =>
+                    window.dispatchEvent(
+                      new CustomEvent("gb:action", { detail: { mode: "projection" } })
+                    )
+                  }
+                  className="w-full rounded-xl bg-muted px-4 py-3 text-left font-medium text-foreground/90 ring-1 ring-white/10 transition hover:bg-muted/80"
+                >
+                  📈 Player projection
+                </button>
 
-              <button
-                type="button"
-                onClick={() => window.dispatchEvent(new CustomEvent("gb:action", { detail: { mode: "matchup" } }))}
-                className="w-full rounded-xl bg-muted px-4 py-3 text-left font-medium text-foreground/90 ring-1 ring-white/10 transition hover:bg-muted/80"
-              >
-                🧠 Matchup
-              </button>
+                <button
+                  type="button"
+                  onClick={() =>
+                    window.dispatchEvent(
+                      new CustomEvent("gb:action", { detail: { mode: "matchup" } })
+                    )
+                  }
+                  className="w-full rounded-xl bg-muted px-4 py-3 text-left font-medium text-foreground/90 ring-1 ring-white/10 transition hover:bg-muted/80"
+                >
+                  🧠 Matchup
+                </button>
 
-              <button
-                type="button"
-                onClick={() => window.dispatchEvent(new CustomEvent("gb:action", { detail: { mode: "parlay" } }))}
-                className="w-full rounded-xl bg-muted px-4 py-3 text-left font-medium text-foreground/90 ring-1 ring-white/10 transition hover:bg-muted/80"
-              >
-                🧩 Parlay ideas
-              </button>
-            </div>
-
+                <button
+                  type="button"
+                  onClick={() =>
+                    window.dispatchEvent(
+                      new CustomEvent("gb:action", { detail: { mode: "parlay" } })
+                    )
+                  }
+                  className="w-full rounded-xl bg-muted px-4 py-3 text-left font-medium text-foreground/90 ring-1 ring-white/10 transition hover:bg-muted/80"
+                >
+                  🧩 Parlay ideas
+                </button>
+              </div>
+            ) : (
+              /* Non-NBA: show suggestions only (no special buttons) */
+              <div className="mt-5">
+                <div className="rounded-xl bg-muted px-4 py-3 ring-1 ring-white/10">
+                  <div className="text-sm font-semibold text-foreground/90">
+                    {sport} tips
+                  </div>
+                  <div className="mt-2 space-y-2 text-sm text-foreground/80">
+                    {PROMPTS[sport].map((p) => (
+                      <div key={p} className="rounded-lg bg-black/5 px-3 py-2">
+                        {p}
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              </div>
+            )}
 
             <div className="mt-6 text-center text-xs text-muted-foreground">
-              Entertainment only, No guarantees.
+              Entertainment only. No guarantees.
             </div>
           </Card>
         </aside>

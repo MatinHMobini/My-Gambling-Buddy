@@ -1,7 +1,7 @@
 import os
 from dotenv import load_dotenv
 from openai import OpenAI
-from .nba_helpers import player_projection, next_game_info, find_team_by_name
+from .nba_helpers import player_projection, next_game_info, find_team_by_name, nba_games_all
 
 load_dotenv()
 client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
@@ -93,3 +93,42 @@ def will_player_score_over(name, target, last_n=5):
     avg = proj["averages"]["pts"]
     likely = "likely" if avg >= target else "unlikely"
     return f"{proj['player_name']} averages {avg} points recently, making it {likely} they score over {target}."
+
+def generic_chat(user_message: str) -> str:
+    """
+    Generic call: no custom system prompt from us.
+    Just send user message to OpenAI and return the response.
+    """
+    response = client.chat.completions.create(
+        model="gpt-4.1",
+        messages=[{"role": "user", "content": user_message}],
+        max_tokens=800
+    )
+    return response.choices[0].message.content
+
+def nba_games(when: str = "this week") -> str:
+    games = nba_games_all(when)
+
+    if not games:
+        return f"No NBA games found for {when}."
+
+    # Group by date (YYYY-MM-DD)
+    grouped: dict[str, list[dict]] = {}
+    for g in games:
+        d = (g.get("date") or "").split("T")[0]
+        grouped.setdefault(d, []).append(g)
+
+    lines = []
+    lines.append(f"🏀 NBA Games ({when})")
+    lines.append("")
+
+    for day in sorted(grouped.keys()):
+        lines.append(f"📅 {day}")
+        for g in grouped[day]:
+            away = g["visitor_team"]["full_name"]
+            home = g["home_team"]["full_name"]
+            lines.append(f"• {away} @ {home}")
+        lines.append("")
+
+    return "\n".join(lines).strip()
+

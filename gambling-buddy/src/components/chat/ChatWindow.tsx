@@ -263,11 +263,27 @@ export function ChatWindow({ sport }: { sport: Sport }) {
           )}
 
           {quickMode === "games" && (
-            <div className="grid gap-2 sm:grid-cols-2">
-              <Input placeholder='When? (e.g., "today", "this week")' value={notes} onChange={(e) => setNotes(e.target.value)} />
-              <Input placeholder='Team filter (optional) e.g. "Warriors"' value={team} onChange={(e) => setTeam(e.target.value)} />
+            <div className="grid gap-2">
+              <div className="flex gap-2">
+                <Button type="button" variant="secondary" onClick={() => setNotes("today")}>
+                  Today
+                </Button>
+                <Button type="button" variant="secondary" onClick={() => setNotes("this week")}>
+                  This week
+                </Button>
+              </div>
+
+              <Input
+                placeholder='When? (type "today" or "this week")'
+                value={notes}
+                onChange={(e) => setNotes(e.target.value)}
+              />
+              <div className="text-xs text-zinc-500">
+                No team needed — I’ll show all NBA games for that period.
+              </div>
             </div>
           )}
+
 
           {quickMode === "parlay" && (
             <div className="grid gap-2 sm:grid-cols-2">

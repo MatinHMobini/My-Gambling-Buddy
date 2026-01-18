@@ -107,14 +107,20 @@ export async function POST(req: Request) {
       }
 
       if (mode === "games") {
-        const team = params?.team?.trim();
-        if (!team) {
-          return NextResponse.json({
-            content: `Tell me the team name. Example: team="Golden State Warriors"`,
-            cards: [],
-          } satisfies ChatResponse);
-        }
+        const when = (params?.notes || "this week").toString();
+
+        const r = await fetch("http://127.0.0.1:8001/games", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ sport, when }),
+        });
+
+        if (!r.ok) throw new Error(`python_server /games HTTP ${r.status}`);
+        const data = await r.json();
+
+        return NextResponse.json({ content: data.content, cards: [] });
       }
+
 
       // ✅ Actually call python
       const py = await callPython(mode, params);
