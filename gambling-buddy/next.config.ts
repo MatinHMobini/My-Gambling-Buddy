@@ -1,10 +1,5 @@
 import type { NextConfig } from "next";
 
-const nextConfig: NextConfig = {
-  reactStrictMode: true,
-  experimental: {
-    appDir: true,
-  },
-};
+const nextConfig: NextConfig = {};
 
 export default nextConfig;
