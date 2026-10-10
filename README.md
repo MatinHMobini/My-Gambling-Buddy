@@ -1,3 +1,9 @@
+<p align="center">
+  <img width="207" height="207" alt="MYGAMBLINGBUDDYLogo" src="https://github.com/user-attachments/assets/718617dc-0497-4478-a877-2c08966ece5e" />
+</p>
+
+
+
 # Inspiration
 
 Sports betting is increasingly popular, but many bettors still make decisions based on gut feelings, Twitter hype, or whatever their friend swears is a "lock". As students interested in software engineering and data-driven decision making, we wanted to build something that feels less like a cold analytics dashboard and more like that one friend who watches way too much sports, but actually backs up their takes with real stats. Instead of encouraging reckless gambling, My Gambling Buddy was designed as an informational companion: a tool that delivers insights on different sports with personality. By mixing real data with slang, humor, and casual commentary, the app makes analysis more approachable, engaging, and easier to digest, like getting advice from a close friend who knows the numbers and isn't afraid to crack a joke while explaining them.
